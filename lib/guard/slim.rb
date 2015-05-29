@@ -1,11 +1,12 @@
-require "guard"
-require "guard/guard"
-require "guard/watcher"
 require "slim"
 require "fileutils"
+require 'guard/compat/plugin'
+
+require_relative "slim/template"
+require_relative "slim/template_renderer"
 
 module Guard
-  class Slim < Guard
+  class Slim < Plugin
     NullContext = Struct.new(:template)
 
     DEFAULTS = {
@@ -16,34 +17,44 @@ module Guard
       :slim_options => {}
     }.freeze
 
-    # Initializes a Guard plugin
+    # Initializes a Guard plugin.
+    # Don't do any work here, especially as Guard plugins get initialized even if they are not in an active group!
     #
-    # @param [Array<Guard::Watcher>] watchers
-    #   the plugin file watchers
-    # @param [Hash] options
-    #   the plugin options
+    # @param [Hash] options the custom Guard plugin options
+    # @option options [Array<Guard::Watcher>] watchers the Guard plugin file watchers
+    # @option options [Symbol] group the group this Guard plugin belongs to
+    # @option options [Boolean] any_return allow any object to be returned from a watcher
     #
-    def initialize(watchers = [], options = {})
-      options = DEFAULTS.merge(options)
-      super(watchers, options)
+    def initialize(options = {})
+      super(DEFAULTS.merge(options))
     end
 
-    # Called once when Guard starts
+    # Called once when Guard starts. Please override initialize method to init stuff.
+    #
+    # @raise [:task_has_failed] when start has failed
+    # @return [Object] the task result
     #
     def start
       run_all if @options[:all_on_start]
     end
 
     # Called when just `enter` is pressed
+    # This method should be principally used for long action like running all specs/tests/...
+    #
+    # @raise [:task_has_failed] when run_all has failed
+    # @return [Object] the task result
     #
     def run_all
-      run_on_changes(Watcher.match_files(self, Dir.glob(File.join('**', '*.*'))))
+      run_on_modifications(Watcher.match_files(self, Dir.glob(File.join('**', '*.*'))))
     end
 
-    # @param [Array<String>] paths
-    #   the changed files or paths
+    # Called on file(s) modifications that the Guard plugin watches.
     #
-    def run_on_changes(paths)
+    # @param [Array<String>] paths the changes files or paths
+    # @raise [:task_has_failed] when run_on_modifications has failed
+    # @return [Object] the task result
+    #
+    def run_on_modifications(paths)
       paths.each { |path| compile(path) }
     end
 
@@ -83,5 +94,3 @@ module Guard
   end
 end
 
-require "guard/slim/template"
-require "guard/slim/template_renderer"
