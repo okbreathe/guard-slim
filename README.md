@@ -33,6 +33,9 @@ The following options can be passed to guard-slim:
   :all_on_start => false   # Compiles all slim files on start
                            # Default: false
 
+  :extension => "html"     # Output extension
+                           # Default: "html"
+
   :context => ContextClass # Render the template in the given context with
                            # the locals specified as methods. Look below for
                            # an example.

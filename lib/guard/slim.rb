@@ -14,6 +14,7 @@ module Guard
       :input        => "templates",
       :output       => "public",
       :context      => nil,
+      :extension    => "html",
       :slim_options => {}
     }.freeze
 
@@ -65,12 +66,10 @@ module Guard
     private
 
     def compile(path)
-      content = render(path)
+      content     = render(path)
       output_path = output_path(path)
 
-      File.open(output_path, "w") do |file|
-        file.puts(content)
-      end
+      File.open(output_path, "w") { |file| file.puts(content) }
 
       UI.info "Guard::Slim: Rendered #{path} to #{output_path}"
     end
@@ -87,7 +86,7 @@ module Guard
       FileUtils.mkpath(dirname) unless File.directory?(dirname)
 
       basename = File.basename(path, '.slim')
-      basename << '.html' if File.extname(basename).empty?
+      basename << ".#{@options[:extension]}" if File.extname(basename).empty?
 
       File.join(dirname, basename)
     end
